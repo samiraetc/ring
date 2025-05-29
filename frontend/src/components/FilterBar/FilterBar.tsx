@@ -1,52 +1,34 @@
-import { Box, Fieldset, Flex } from "@chakra-ui/react";
+import { Box, Fieldset, Flex, Button } from "@chakra-ui/react";
 import { Select } from "chakra-react-select";
 import { useEffect, useState } from "react";
 import { useServices } from "@/hooks/useService";
 
 type Props = {
-  onFilterChange: (filters: UserFilterValues) => void;
-  filters: UserFilterValues;
+  onSearch: (filters: UserFilterValues) => void;
 };
 
-export default function FilterBar({ onFilterChange, filters }: Props) {
+export default function FilterBar({ onSearch }: Props) {
+  const [filters, setFilters] = useState<UserFilterValues>({});
   const { data: services = [] } = useServices();
 
-  const [selectedService, setSelectedService] = useState<string | null>(
-    filters.service || null
-  );
-  const [sortBy, setSortBy] = useState<"rating" | "reviews" | "">(
-    filters.sortBy || ""
-  );
-
   useEffect(() => {
-    setSelectedService(filters.service || null);
-  }, [filters.service]);
-
-  useEffect(() => {
-    setSortBy((filters.sortBy as "rating" | "reviews" | "") || "");
-  }, [filters.sortBy]);
-
-  useEffect(() => {
-    onFilterChange({
-      service: selectedService || undefined,
-      sortBy: sortBy || undefined,
-    });
-  }, [selectedService, sortBy]);
-
-  useEffect(() => {
-    const filters = {
-      service: selectedService,
-      sortBy,
-    };
     localStorage.setItem("userFilters", JSON.stringify(filters));
-  }, [selectedService, sortBy]);
+  }, [filters]);
 
   const handleServiceChange = (selected: { value: string } | null) => {
-    setSelectedService(selected?.value || "");
+    setFilters({
+      ...filters,
+      service: selected?.value || "",
+    });
   };
 
-  const handleSortChange = (selected: { value: string } | null) => {
-    setSortBy((selected?.value as "rating" | "reviews" | "") || "");
+  const handleSortChange = (
+    selected: { value: "rating" | "reviews" | "" } | null
+  ) => {
+    setFilters({
+      ...filters,
+      sortBy: selected?.value,
+    });
   };
 
   const serviceOptions = services.map((s: Service) => ({
@@ -58,7 +40,7 @@ export default function FilterBar({ onFilterChange, filters }: Props) {
     <Box mb={6}>
       <Fieldset.Root>
         <Fieldset.Content>
-          <Flex gap="4" wrap="wrap">
+          <Flex gap="4" wrap="wrap" align="end">
             <Box minW="250px" flex="1">
               <Select
                 name="service"
@@ -66,9 +48,9 @@ export default function FilterBar({ onFilterChange, filters }: Props) {
                 isClearable
                 options={serviceOptions}
                 value={
-                  selectedService
-                    ? { label: selectedService, value: selectedService }
-                    : null
+                  serviceOptions.find(
+                    (opt: { value: string }) => opt.value === filters.service
+                  ) || null
                 }
                 onChange={handleServiceChange}
               />
@@ -84,19 +66,27 @@ export default function FilterBar({ onFilterChange, filters }: Props) {
                   { label: "Most Reviews", value: "reviews" },
                 ]}
                 value={
-                  sortBy
+                  filters.sortBy
                     ? {
                         label:
-                          sortBy === "rating"
+                          filters.sortBy === "rating"
                             ? "Highest Rating"
                             : "Most Reviews",
-                        value: sortBy,
+                        value: filters.sortBy,
                       }
                     : null
                 }
                 onChange={handleSortChange}
               />
             </Box>
+
+            <Button
+              colorScheme="green"
+              minW="120px"
+              onClick={() => onSearch(filters)}
+            >
+              Search
+            </Button>
           </Flex>
         </Fieldset.Content>
       </Fieldset.Root>

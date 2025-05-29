@@ -113,7 +113,6 @@ const CreateUser = () => {
             <Field.Label>Services</Field.Label>
             <Combobox.Root
               multiple
-              closeOnSelect
               width="100%"
               value={selectedServiceNames}
               collection={collection}

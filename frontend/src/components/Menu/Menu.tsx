@@ -8,11 +8,11 @@ function MenuBar() {
       href: "/",
     },
     {
-      name: "User",
+      name: "Create User",
       href: "/user",
     },
     {
-      name: "Services",
+      name: "Create Services",
       href: "/services",
     },
   ];

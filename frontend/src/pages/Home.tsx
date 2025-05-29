@@ -21,7 +21,7 @@ const fetchUsers = async (filters?: UserFilterValues) => {
 };
 
 const Home = () => {
-  const [filters, setFilters] = useState<UserFilterValues>({});
+  const [appliedFilters, setAppliedFilters] = useState<UserFilterValues>({});
   const [initialUsers, setInitialUsers] = useState<User[] | undefined>(
     undefined
   );
@@ -33,40 +33,41 @@ const Home = () => {
 
     try {
       if (storedFilters) {
-        const parsedFilters = JSON.parse(storedFilters);
-        setFilters(parsedFilters);
+        const parsedFilters = JSON.parse(storedFilters) ?? {};
+        setAppliedFilters(parsedFilters);
       }
 
       if (storedUsers) {
-        const parsedUsers = JSON.parse(storedUsers);
+        const parsedUsers = JSON.parse(storedUsers) ?? [];
         setInitialUsers(parsedUsers);
       }
-    } catch {
-      setFilters({});
     } finally {
       setIsReady(true);
     }
   }, []);
 
-  const { data: users, isLoading } = useQuery({
-    queryKey: ["users", filters],
-    queryFn: () => fetchUsers(filters),
+  const {
+    data: users,
+    isLoading,
+    isFetching,
+  } = useQuery({
+    queryKey: ["users", appliedFilters],
+    queryFn: () => fetchUsers(appliedFilters),
     enabled: isReady,
+    placeholderData: (prev) => prev,
     initialData: initialUsers,
   });
-  if (!isReady || (!initialUsers && isLoading)) return <Loading />;
+
+  if (isLoading && !users?.length) return <Loading />;
 
   return (
     <>
       <MenuBar />
       <Container>
-        <FilterBar onFilterChange={setFilters} filters={filters} />
-        <Box display="flex" flexWrap="wrap" gap={4}>
-          {users?.map((user: User) => (
-            <UserCards user={user} key={user.id} />
-          ))}
+        <FilterBar onSearch={setAppliedFilters} />
 
-          {users?.length === 0 && (
+        <Box display="flex" flexWrap="wrap" gap={4}>
+          {!isLoading && !isFetching && users?.length === 0 ? (
             <EmptyState.Root>
               <EmptyState.Content>
                 <EmptyState.Indicator>
@@ -80,6 +81,8 @@ const Home = () => {
                 </VStack>
               </EmptyState.Content>
             </EmptyState.Root>
+          ) : (
+            users?.map((user: User) => <UserCards user={user} key={user.id} />)
           )}
         </Box>
       </Container>
