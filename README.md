@@ -40,7 +40,6 @@ docker compose up --build
 npx prisma generate
 npx prisma db push
 npm run seeds
-npm run dev
 ```
 
 #### Frontend
@@ -90,7 +89,10 @@ npm run dev
 
 ### 🖥️ Optional Live Demo
 
-> Coming soon on Vercel/Netlify (optional but encouraged)
+Since the project includes a backend connected to a SQL database, using Vercel was not feasible — as the platform is primarily focused on frontend and serverless applications. Therefore, I chose to host the application on [Railway](http://railway.com/), which provides full support for backend services and relational databases, offering a better fit for the project’s stack.
+
+Frontend: https://ring-frontend-production.up.railway.app/
+Backend: https://ring-production-76d6.up.railway.app/
 
 ---
 

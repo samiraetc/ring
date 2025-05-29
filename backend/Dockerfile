@@ -24,3 +24,4 @@ RUN npm install -g prisma
 ENV NODE_ENV=production
 
 CMD ["node", "dist/server.js"]
+
