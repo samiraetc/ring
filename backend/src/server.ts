@@ -177,6 +177,42 @@ fastify.post("/users/:id/reviews", async (req, reply) => {
   return review;
 });
 
+fastify.get("/users/:id", async (req, reply) => {
+  const { id } = req.params as { id: string };
+
+  const userId = parseInt(id);
+  if (isNaN(userId)) {
+    return reply.status(400).send({ error: "Invalid user ID" });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      reviews: true,
+      services: true,
+    },
+  });
+
+  if (!user) {
+    return reply.status(404).send({ error: "User not found" });
+  }
+
+  const totalReviews = user.reviews.length;
+  const averageRating =
+    totalReviews === 0
+      ? 0
+      : user.reviews.reduce(
+          (sum: number, r: (typeof user.reviews)[number]) => sum + r.rating,
+          0
+        ) / totalReviews;
+
+  return {
+    ...user,
+    totalReviews,
+    averageRating: Number(averageRating.toFixed(2)),
+  };
+});
+
 // DELETE /users/:id
 fastify.delete("/users/:id", async (req, reply) => {
   const { id } = req.params as { id: string };
