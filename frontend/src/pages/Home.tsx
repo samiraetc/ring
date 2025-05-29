@@ -41,10 +41,6 @@ const Home = () => {
     }
   }, [queryClient]);
 
-  // const cachedData = queryClient.getQueryData<User[]>([
-  //   "users",
-  //   appliedFilters,
-  // ]);
 
   const {
     data: users,
@@ -66,7 +62,7 @@ const Home = () => {
       <MenuBar />
       <Container>
         <FilterBar onSearch={setAppliedFilters} />
-        
+
         <Box display="flex" flexWrap="wrap" gap={4}>
           {!isLoading && !isFetching && users?.length === 0 ? (
             <EmptyState.Root>
