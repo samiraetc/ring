@@ -23,15 +23,28 @@ const fetchUsers = async (filters?: UserFilterValues) => {
 const Home = () => {
   const [appliedFilters, setAppliedFilters] = useState<UserFilterValues>({});
   const queryClient = useQueryClient();
-  const [isReady, setIsReady] = useState(false);
-  const storedUsers = JSON.parse(localStorage.getItem("userList") ?? "[]");
+  const [storedUsers, setStoredUsers] = useState<User[] | null>(null);
 
   useEffect(() => {
-    if (storedUsers && !queryClient.getQueryData(["users", appliedFilters])) {
-      queryClient.setQueryData(["users", appliedFilters], storedUsers);
+    const usersFromStorage = localStorage.getItem("userList");
+    if (usersFromStorage) {
+      try {
+        const parsed = JSON.parse(usersFromStorage);
+        setStoredUsers(parsed);
+
+        queryClient.setQueryData(["users", {}], parsed);
+      } catch {
+        setStoredUsers([]);
+      }
+    } else {
+      setStoredUsers([]);
     }
-    setIsReady(true);
-  }, [appliedFilters, queryClient, storedUsers]);
+  }, [queryClient]);
+
+  // const cachedData = queryClient.getQueryData<User[]>([
+  //   "users",
+  //   appliedFilters,
+  // ]);
 
   const {
     data: users,
@@ -40,10 +53,13 @@ const Home = () => {
   } = useQuery({
     queryKey: ["users", appliedFilters],
     queryFn: () => fetchUsers(appliedFilters),
-    enabled: isReady,
+    enabled: storedUsers !== null,
+    initialData: storedUsers ?? [],
   });
 
-  if (isLoading && !storedUsers?.length) return <Loading />;
+  if (isLoading && (!storedUsers || storedUsers.length === 0)) {
+    return <Loading />;
+  }
 
   return (
     <>
