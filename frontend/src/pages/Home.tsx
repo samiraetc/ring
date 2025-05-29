@@ -28,15 +28,9 @@ const Home = () => {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const storedFilters = localStorage.getItem("userFilters");
     const storedUsers = localStorage.getItem("userList");
 
     try {
-      if (storedFilters) {
-        const parsedFilters = JSON.parse(storedFilters) ?? {};
-        setAppliedFilters(parsedFilters);
-      }
-
       if (storedUsers) {
         const parsedUsers = JSON.parse(storedUsers) ?? [];
         setInitialUsers(parsedUsers);
