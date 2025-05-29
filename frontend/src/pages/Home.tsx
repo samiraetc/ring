@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Box, Container, EmptyState, VStack } from "@chakra-ui/react";
 import api from "@/api/axios";
 
@@ -22,29 +22,29 @@ const fetchUsers = async (filters?: UserFilterValues) => {
 
 const Home = () => {
   const [appliedFilters, setAppliedFilters] = useState<UserFilterValues>({});
-  const [initialUsers, setInitialUsers] = useState<User[] | undefined>(
-    undefined
-  );
-  const [isReady, setIsReady] = useState(false);
+  const queryClient = useQueryClient();
+  const [storedUsers, setStoredUsers] = useState<User[] | null>(null);
 
   useEffect(() => {
-    const storedFilters = localStorage.getItem("userFilters");
-    const storedUsers = localStorage.getItem("userList");
+    const usersFromStorage = localStorage.getItem("userList");
+    if (usersFromStorage) {
+      try {
+        const parsed = JSON.parse(usersFromStorage);
+        setStoredUsers(parsed);
 
-    try {
-      if (storedFilters) {
-        const parsedFilters = JSON.parse(storedFilters) ?? {};
-        setAppliedFilters(parsedFilters);
+        queryClient.setQueryData(["users", {}], parsed);
+      } catch {
+        setStoredUsers([]);
       }
-
-      if (storedUsers) {
-        const parsedUsers = JSON.parse(storedUsers) ?? [];
-        setInitialUsers(parsedUsers);
-      }
-    } finally {
-      setIsReady(true);
+    } else {
+      setStoredUsers([]);
     }
-  }, []);
+  }, [queryClient]);
+
+  // const cachedData = queryClient.getQueryData<User[]>([
+  //   "users",
+  //   appliedFilters,
+  // ]);
 
   const {
     data: users,
@@ -53,19 +53,20 @@ const Home = () => {
   } = useQuery({
     queryKey: ["users", appliedFilters],
     queryFn: () => fetchUsers(appliedFilters),
-    enabled: isReady,
-    placeholderData: (prev) => prev,
-    initialData: initialUsers,
+    enabled: storedUsers !== null,
+    initialData: storedUsers ?? [],
   });
 
-  if (isLoading && !users?.length) return <Loading />;
+  if (isLoading && (!storedUsers || storedUsers.length === 0)) {
+    return <Loading />;
+  }
 
   return (
     <>
       <MenuBar />
       <Container>
         <FilterBar onSearch={setAppliedFilters} />
-
+        
         <Box display="flex" flexWrap="wrap" gap={4}>
           {!isLoading && !isFetching && users?.length === 0 ? (
             <EmptyState.Root>
