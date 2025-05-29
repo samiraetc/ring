@@ -41,11 +41,6 @@ const Home = () => {
     }
   }, [queryClient]);
 
-  // const cachedData = queryClient.getQueryData<User[]>([
-  //   "users",
-  //   appliedFilters,
-  // ]);
-
   const {
     data: users,
     isLoading,
