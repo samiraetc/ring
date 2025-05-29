@@ -8,8 +8,8 @@
     "start": "node dist/server.js",
     "prisma": "prisma",
     "seeds": "npx ts-node prisma/seed.ts ",
-    "postinstall": "prisma generate",
-    "deploy": "prisma db push && npm run seeds"
+    "postinstall": "npx prisma generate",
+    "deploy": "npx prisma db push && npm run seeds"
   },
   "dependencies": {
     "@fastify/cors": "^11.0.1",
