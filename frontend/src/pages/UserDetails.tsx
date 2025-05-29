@@ -80,9 +80,7 @@ const UserDetails = () => {
         </Box>
 
         <Box flex="1" maxWidth="50%">
-          <Heading size="3xl" mb={2} fontWeight="extrabold">
-            Do you have a service to request?
-          </Heading>
+         
 
           <Heading size="md" mt={2} mb={1}>
             Location
@@ -115,7 +113,7 @@ const UserDetails = () => {
           <Heading size="md" mb={2}>
             Reviews ({user.reviews.length})
           </Heading>
-          <Box maxH="300px" overflowY="auto" spaceY={2}>
+          <Box maxH="280px" overflowY="auto" spaceY={2}>
             {user.reviews.map((review) => (
               <ReviewCard review={review} key={review.id} />
             ))}
