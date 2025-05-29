@@ -41,7 +41,6 @@ const Home = () => {
     }
   }, [queryClient]);
 
-
   const {
     data: users,
     isLoading,
@@ -62,7 +61,6 @@ const Home = () => {
       <MenuBar />
       <Container>
         <FilterBar onSearch={setAppliedFilters} />
-
         <Box display="flex" flexWrap="wrap" gap={4}>
           {!isLoading && !isFetching && users?.length === 0 ? (
             <EmptyState.Root>

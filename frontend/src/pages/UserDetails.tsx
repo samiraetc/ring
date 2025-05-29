@@ -9,7 +9,7 @@ import {
   Field,
   Textarea,
 } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import Loading from "@/components/Loading/Loading";
@@ -21,20 +21,54 @@ import ReviewCard from "@/components/ReviewCard/ReviewCard";
 import api from "@/api/axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toaster } from "@/components/ui/toaster";
-import { addReviewToSelectedUser } from "@/redux/user/userSlice";
+import {
+  addReviewToSelectedUser,
+  setSelectedUser,
+} from "@/redux/user/userSlice";
 import MenuBar from "@/components/Menu/Menu";
 
+const fetchUser = async (id: string) => {
+  const res = await api.get(`/users/${id}`);
+  return res.data;
+};
+
 const UserDetails = () => {
-  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
+
   const user = useSelector(
     (state: RootState) => state.users.selectedUser
-  ) as User | null;
+  ) as User;
 
+  const [loadingUser, setLoadingUser] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
-  const dispatch = useDispatch();
 
-  const queryClient = useQueryClient();
+  useEffect(() => {
+    const loadUserIfNeeded = async () => {
+      if (!id) return;
+
+      const userIdFromParams = parseInt(id);
+      if (!user || user.id !== userIdFromParams) {
+        setLoadingUser(true);
+        try {
+          const data = await fetchUser(id);
+          dispatch(setSelectedUser(data));
+        } catch {
+          toaster.create({
+            title: "Failed to load user",
+            type: "error",
+          });
+        } finally {
+          setLoadingUser(false);
+        }
+      }
+    };
+
+    loadUserIfNeeded();
+  }, [id, user, dispatch]);
+
   const reviewMutation = useMutation({
     mutationFn: (data: { rating: number; comment: string }) =>
       api.post(`/users/${user?.id}/reviews`, data),
@@ -46,7 +80,6 @@ const UserDetails = () => {
       });
       setRating(0);
       setComment("");
-
       queryClient.invalidateQueries({ queryKey: ["users"] });
       dispatch(addReviewToSelectedUser(newReview.data));
     },
@@ -61,13 +94,7 @@ const UserDetails = () => {
     },
   });
 
-  useEffect(() => {
-    if (!user) {
-      navigate("/");
-    }
-  }, [user, navigate]);
-
-  if (!user) {
+  if (loadingUser || !user) {
     return <Loading />;
   }
 
@@ -80,10 +107,6 @@ const UserDetails = () => {
         </Box>
 
         <Box flex="1" maxWidth="50%">
-          <Heading size="3xl" mb={2} fontWeight="extrabold">
-            Do you have a service to request?
-          </Heading>
-
           <Heading size="md" mt={2} mb={1}>
             Location
           </Heading>
@@ -115,7 +138,7 @@ const UserDetails = () => {
           <Heading size="md" mb={2}>
             Reviews ({user.reviews.length})
           </Heading>
-          <Box maxH="300px" overflowY="auto" spaceY={2}>
+          <Box maxH="280px" overflowY="auto" spaceY={2}>
             {user.reviews.map((review) => (
               <ReviewCard review={review} key={review.id} />
             ))}
