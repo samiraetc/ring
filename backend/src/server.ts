@@ -177,6 +177,27 @@ fastify.post("/users/:id/reviews", async (req, reply) => {
   return review;
 });
 
+// DELETE /users/:id
+fastify.delete("/users/:id", async (req, reply) => {
+  const { id } = req.params as { id: string };
+  const userId = Number(id);
+
+  try {
+    await prisma.review.deleteMany({
+      where: { userId },
+    });
+
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return reply.send({ message: "User and comments deleted successfully." });
+  } catch (error) {
+    console.error(error);
+    return reply.status(500).send({ error: "Error deleting user" });
+  }
+});
+
 // =========================
 // Start Server
 // =========================

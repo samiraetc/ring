@@ -8,12 +8,15 @@ import {
   Flex,
 } from "@chakra-ui/react";
 import { GrLocation } from "react-icons/gr";
-import { BiSolidStar } from "react-icons/bi";
+import { BiSolidStar, BiTrash } from "react-icons/bi";
 import { AVATAR_RING } from "@/themes/avatar";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setSelectedUser } from "@/redux/user/userSlice";
 import EditUserModal from "../EditUserModal/EditUserModal";
+import { toaster } from "../ui/toaster";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "@/api/axios";
 
 interface UserCardsProps {
   user: User;
@@ -23,9 +26,35 @@ const UserCards = ({ user }: UserCardsProps) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  const queryClient = useQueryClient();
+
   const handleClick = () => {
     dispatch(setSelectedUser(user));
     navigate(`/user/${user.id}`);
+  };
+
+  const deleteMutation = useMutation({
+    mutationFn: (userId: number) => api.delete(`/users/${userId}`),
+    onSuccess: () => {
+      toaster.create({
+        title: "User deleted successfully!",
+        type: "success",
+        duration: 3000,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: () => {
+      toaster.create({
+        title: "Error deleting user",
+        type: "error",
+        duration: 4000,
+      });
+    },
+  });
+
+  const handleDelete = (userId: number) => {
+    deleteMutation.mutate(userId);
   };
 
   return (
@@ -69,7 +98,17 @@ const UserCards = ({ user }: UserCardsProps) => {
                   </Text>
                 </Box>
               </Box>
-              <EditUserModal user={user} />
+              <Flex>
+                <Button
+                  size="sm"
+                  colorScheme="teal"
+                  variant="ghost"
+                  onClick={() => handleDelete(user.id)}
+                >
+                  <BiTrash />
+                </Button>
+                <EditUserModal user={user} />
+              </Flex>
             </Flex>
 
             <Box display="flex" alignItems="center" gap="1">
