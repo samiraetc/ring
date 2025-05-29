@@ -40,7 +40,6 @@ docker compose up --build
 npx prisma generate
 npx prisma db push
 npm run seeds
-npm run dev
 ```
 
 #### Frontend

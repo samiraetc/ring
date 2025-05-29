@@ -7,10 +7,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "prisma": "prisma",
-    "seeds": "npx ts-node prisma/seed.ts ",
-    "prisma:generate": "npx prisma generate --schema=./prisma/schema.prisma",
-    "prisma:dbpush": "npx prisma db push --schema=./prisma/schema.prisma",
-    "deploy": "npm run prisma:dbpush && npm run seeds"
+    "seeds": "npx ts-node prisma/seed.ts "
   },
   "dependencies": {
     "@fastify/cors": "^11.0.1",
