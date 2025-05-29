@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Box, Container, EmptyState, VStack } from "@chakra-ui/react";
 import api from "@/api/axios";
 
@@ -22,23 +22,16 @@ const fetchUsers = async (filters?: UserFilterValues) => {
 
 const Home = () => {
   const [appliedFilters, setAppliedFilters] = useState<UserFilterValues>({});
-  const [initialUsers, setInitialUsers] = useState<User[] | undefined>(
-    undefined
-  );
+  const queryClient = useQueryClient();
   const [isReady, setIsReady] = useState(false);
+  const storedUsers = JSON.parse(localStorage.getItem("userList") ?? "[]");
 
   useEffect(() => {
-    const storedUsers = localStorage.getItem("userList");
-
-    try {
-      if (storedUsers) {
-        const parsedUsers = JSON.parse(storedUsers) ?? [];
-        setInitialUsers(parsedUsers);
-      }
-    } finally {
-      setIsReady(true);
+    if (storedUsers && !queryClient.getQueryData(["users", appliedFilters])) {
+      queryClient.setQueryData(["users", appliedFilters], storedUsers);
     }
-  }, []);
+    setIsReady(true);
+  }, [appliedFilters, queryClient, storedUsers]);
 
   const {
     data: users,
@@ -48,18 +41,15 @@ const Home = () => {
     queryKey: ["users", appliedFilters],
     queryFn: () => fetchUsers(appliedFilters),
     enabled: isReady,
-    placeholderData: (prev) => prev,
-    initialData: initialUsers,
   });
 
-  if (isLoading && !users?.length) return <Loading />;
+  if (isLoading && !storedUsers?.length) return <Loading />;
 
   return (
     <>
       <MenuBar />
       <Container>
         <FilterBar onSearch={setAppliedFilters} />
-
         <Box display="flex" flexWrap="wrap" gap={4}>
           {!isLoading && !isFetching && users?.length === 0 ? (
             <EmptyState.Root>
